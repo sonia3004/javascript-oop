@@ -10,9 +10,15 @@
         font-style: italic;
       }
 
-      li {
+      #liste {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+      }
+
+      #liste > div {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr;
+        grid-gap: 10px;
       }
     </style>
     <script src="./scripts/classes.js"></script>
@@ -28,7 +34,7 @@
 
       function displayPersons() {
           persons.forEach(person => {
-              const listItem = document.createElement('li');
+              const listItem = document.createElement('div');
               const title = document.createElement('span');
               title.innerText = person.name;
 
@@ -144,7 +150,7 @@
   </head>
 
   <body>
-    <ul id="liste"></ul>
+    <div id="liste"></div>
     <button id="btnAddProf">Ajouter un professeur</button>
     <button id="btnAddStud">Ajouter un étudiant</button>
   </body>
