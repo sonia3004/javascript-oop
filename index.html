@@ -21,6 +21,11 @@
       const persons = [];
       persons.push(new Professor('Arnaud MICHOUD', 'Javascript'));
       persons.push(new Student('BELKASSEM Zakariya', 2));
+      persons.push(new Student('BOUTALEB Sonia', 2));
+      persons.push(new Student('FATINE Youness', 2));
+      persons.push(new Student('JULLIAT Tom', 2));
+      persons.push(new Student('KOUASSI Emmanuel', 2));
+      persons.push(new Student('LIVROZET Mattéo', 2));
 
       document.addEventListener("DOMContentLoaded", () => {
           const list = document.getElementById('liste');
@@ -43,6 +48,7 @@
               button.innerText = 'Bonjour';
               button.onclick = () => {
                 alert(person.direBonjour());
+                person.name = 'toto';
               }
 
               listItem.appendChild(title);
