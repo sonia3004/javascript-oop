@@ -1,37 +1,41 @@
 class Person {
-  name = "";
+  #name = "";
 
   constructor(name) {
-    this.name = name;
+    this.#name = name;
+  }
+
+  get name() {
+    return this.#name;
   }
 
   direBonjour() {
-    return `Bonjour, je m'appelle ${this.name}`;
+    return `Bonjour, je m'appelle ${this.#name}`;
   }
 }
 
 class Professor extends Person {
-  teaches = "";
+  #teaches = "";
 
   constructor(name, subject) {
     super(name);
-    this.teaches = subject;
+    this.#teaches = subject;
   }
 
   direBonjour() {
-    return super.direBonjour() + " et j'enseigne " + this.teaches;
+    return super.direBonjour() + " et j'enseigne " + this.#teaches;
   }
 }
 
 class Student extends Person {
-  year = "";
+  #year = "";
 
   constructor(name, year) {
     super(name);
-    this.year = year;
+    this.#year = year;
   }
 
   direBonjour() {
-    return super.direBonjour() + " et je suis en année " + this.year;
+    return super.direBonjour() + " et je suis en année " + this.#year;
   }
 }

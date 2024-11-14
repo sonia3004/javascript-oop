@@ -9,6 +9,12 @@
       .student {
         font-style: italic;
       }
+
+      li {
+        display: flex;
+        justify-content: space-between;
+        justify-items: center;
+      }
     </style>
     <script src="./scripts/classes.js"></script>
     <script lang="js">
@@ -21,7 +27,8 @@
 
           persons.forEach(person => {
               const listItem = document.createElement('li');
-              listItem.innerHTML = person.direBonjour();
+              const title = document.createElement('span');
+              title.innerText = person.name;
 
               if (person instanceof Professor) {
                 listItem.classList.add('professor');
@@ -31,6 +38,15 @@
                 listItem.classList.add('student');
               }
 
+              const button = document.createElement('button');
+
+              button.innerText = 'Bonjour';
+              button.onclick = () => {
+                alert(person.direBonjour());
+              }
+
+              listItem.appendChild(title);
+              listItem.appendChild(button);
               list.appendChild(listItem);
           });
       });
