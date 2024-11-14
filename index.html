@@ -22,74 +22,112 @@
       let list;
 
       function clearPersons() {
-        while (list.children.length > 0) {
-            list.removeChild(list.firstChild);
-        }
+          while (list.children.length > 0) {
+              list.removeChild(list.firstChild);
+          }
       }
 
       function displayPersons() {
-        persons.forEach(person => {
-            const listItem = document.createElement('li');
-            const title = document.createElement('span');
-            title.innerText = person.name;
+          persons.forEach(person => {
+              const listItem = document.createElement('li');
+              const title = document.createElement('span');
+              title.innerText = person.name;
 
-            if (person instanceof Professor) {
-            listItem.classList.add('professor');
-            }
+              if (person instanceof Professor) {
+                  listItem.classList.add('professor');
+              }
 
-            if (person instanceof Student) {
-            listItem.classList.add('student');
-            }
+              if (person instanceof Student) {
+                  listItem.classList.add('student');
+              }
 
-            const button = document.createElement('button');
+              const button = document.createElement('button');
 
-            button.innerText = 'Bonjour';
-            button.onclick = () => {
-            alert(person.direBonjour());
-            person.name = 'toto';
-            }
+              button.innerText = 'Bonjour';
+              button.onclick = () => {
+                  alert(person.direBonjour());
+                  person.name = 'toto';
+              }
 
-            listItem.appendChild(title);
-            listItem.appendChild(button);
-            list.appendChild(listItem);
+              listItem.appendChild(title);
+              listItem.appendChild(button);
+              list.appendChild(listItem);
           });
       }
 
       function refreshPersons() {
-        clearPersons();
-        displayPersons();
+          clearPersons();
+          displayPersons();
       }
 
       function addProfessor() {
-        const name = prompt('Nom du professeur');
-        const teaches = prompt('Matière enseignée');
-        const professor = new Professor(name, teaches);
+          const name = prompt('Nom du professeur');
+          const teaches = prompt('Matière enseignée');
+          const professor = new Professor(name, teaches);
 
-        persons.push(professor);
-        refreshPersons();
+          persons.push(professor);
+          storePersons();
+          refreshPersons();
       }
 
       function addStudent() {
-        const name  = prompt('Nom de l\'élève');
-        const year = prompt('Année ?');
-        const student = new Student(name, year);
+          const name = prompt('Nom de l\'élève');
+          const year = prompt('Année ?');
+          const student = new Student(name, year);
 
-        persons.push(student);
-        refreshPersons();
+          persons.push(student);
+          storePersons();
+          refreshPersons();
+      }
+
+      function personsToJSON() {
+          return persons.map(person => person.toJSON());
+      }
+
+      function storePersons() {
+          const jsonPersons = personsToJSON();
+          localStorage.setItem('persons', JSON.stringify(jsonPersons));
+      }
+
+      function retrievePersons() {
+          const strPersons = localStorage.getItem('persons');
+
+          if (strPersons) {
+              const jsonPersons = JSON.parse(strPersons);
+              persons.push(
+                  ...jsonPersons.map(jsonPerson => {
+                      let person;
+
+                      switch (jsonPerson.type) {
+                          case 'Professor':
+                              person = new Professor();
+                              break;
+                          case 'Student':
+                              person = new Student();
+                              break;
+                      }
+
+                      person.fromJSON(jsonPerson);
+                      return person;
+                  })
+              );
+          }
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        list = document.getElementById('liste');
-        const btnAddProf = document.getElementById('btnAddProf');
-        const btnAddStud = document.getElementById('btnAddStud');
+          list = document.getElementById('liste');
+          const btnAddProf = document.getElementById('btnAddProf');
+          const btnAddStud = document.getElementById('btnAddStud');
 
-        btnAddProf.addEventListener('click', addProfessor);
-        btnAddStud.addEventListener('click', addStudent);
+          btnAddProf.addEventListener('click', addProfessor);
+          btnAddStud.addEventListener('click', addStudent);
 
-        displayPersons();
+          retrievePersons();
+          displayPersons();
       });
     </script>
   </head>
+
   <body>
     <ul id="liste"></ul>
     <button id="btnAddProf">Ajouter un professeur</button>
