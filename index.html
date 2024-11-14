@@ -3,13 +3,13 @@
   <script lang="js">
     const person = new Person('Arnaud MICHOUD');
     console.log(person.direBonjour());
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const tableau = document.getElementById("tableau");
+        tableau.innerHTML = person.direBonjour();
+    });
   </script>
   <body>
     <div id="tableau"></div>
   </body>
-  <script lang="ts">
-    const tableau = document.getElementById("tableau");
-
-    tableau.innerHTML = person.direBonjour();
-  </script>
 </html>
