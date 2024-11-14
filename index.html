@@ -1,15 +1,21 @@
 <html>
   <script src="./scripts/classes.js"></script>
   <script lang="js">
-    const person = new Person('Arnaud MICHOUD');
-    console.log(person.direBonjour());
+    const persons = [];
+    persons.push(new Person('Arnaud MICHOUD'));
+    persons.push(new Person('John DOE'));
 
     document.addEventListener("DOMContentLoaded", () => {
-        const tableau = document.getElementById("tableau");
-        tableau.innerHTML = person.direBonjour();
+        const list = document.getElementById('liste');
+
+        persons.forEach(person => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = person.direBonjour();
+            list.appendChild(listItem);
+        });
     });
   </script>
   <body>
-    <div id="tableau"></div>
+    <ul id="liste"></ul>
   </body>
 </html>
