@@ -71,13 +71,18 @@
       }
 
       function addProfessor() {
-          const name = prompt('Nom du professeur');
-          const teaches = prompt('Matière enseignée');
-          const professor = new Professor(name, teaches);
+        if (persons.some(person => person instanceof Professor)) {
+            alert('Il existe déjà un professeur dans cette classe');
+            return;
+        }
 
-          persons.push(professor);
-          storePersons();
-          refreshPersons();
+        const name = prompt('Nom du professeur');
+        const teaches = prompt('Matière enseignée');
+        const professor = new Professor(name, teaches);
+
+        persons.push(professor);
+        storePersons();
+        refreshPersons();
       }
 
       function addStudent() {
