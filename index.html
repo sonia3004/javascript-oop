@@ -1,30 +1,41 @@
 <html>
-  <style>
-    .professor {
-      font-weight: bold;
-    }
-  </style>
-  <script src="./scripts/classes.js"></script>
-  <script lang="js">
-    const persons = [];
-    persons.push(new Professor('Arnaud MICHOUD', 'Javascript'));
-    persons.push(new Person('John DOE'));
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      .professor {
+        font-weight: bold;
+      }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const list = document.getElementById('liste');
+      .student {
+        font-style: italic;
+      }
+    </style>
+    <script src="./scripts/classes.js"></script>
+    <script lang="js">
+      const persons = [];
+      persons.push(new Professor('Arnaud MICHOUD', 'Javascript'));
+      persons.push(new Student('BELKASSEM Zakariya', 2));
 
-        persons.forEach(person => {
-            const listItem = document.createElement('li');
-            listItem.innerHTML = person.direBonjour();
+      document.addEventListener("DOMContentLoaded", () => {
+          const list = document.getElementById('liste');
 
-            if (person instanceof Professor) {
+          persons.forEach(person => {
+              const listItem = document.createElement('li');
+              listItem.innerHTML = person.direBonjour();
+
+              if (person instanceof Professor) {
                 listItem.classList.add('professor');
-            }
+              }
 
-            list.appendChild(listItem);
-        });
-    });
-  </script>
+              if (person instanceof Student) {
+                listItem.classList.add('student');
+              }
+
+              list.appendChild(listItem);
+          });
+      });
+    </script>
+  </head>
   <body>
     <ul id="liste"></ul>
   </body>

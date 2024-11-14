@@ -22,3 +22,16 @@ class Professor extends Person {
     return super.direBonjour() + " et j'enseigne " + this.teaches;
   }
 }
+
+class Student extends Person {
+  year = "";
+
+  constructor(name, year) {
+    super(name);
+    this.year = year;
+  }
+
+  direBonjour() {
+    return super.direBonjour() + " et je suis en année " + this.year;
+  }
+}
