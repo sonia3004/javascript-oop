@@ -1,4 +1,9 @@
 <html>
+  <style>
+    .professor {
+      font-weight: bold;
+    }
+  </style>
   <script src="./scripts/classes.js"></script>
   <script lang="js">
     const persons = [];
@@ -11,6 +16,11 @@
         persons.forEach(person => {
             const listItem = document.createElement('li');
             listItem.innerHTML = person.direBonjour();
+
+            if (person instanceof Professor) {
+                listItem.classList.add('professor');
+            }
+
             list.appendChild(listItem);
         });
     });
