@@ -13,7 +13,6 @@
       li {
         display: flex;
         justify-content: space-between;
-        justify-items: center;
       }
     </style>
     <script src="./scripts/classes.js"></script>
@@ -34,23 +33,34 @@
               title.innerText = person.name;
 
               if (person instanceof Professor) {
-                  listItem.classList.add('professor');
+                listItem.classList.add('professor');
               }
 
               if (person instanceof Student) {
-                  listItem.classList.add('student');
+                 listItem.classList.add('student');
               }
 
               const button = document.createElement('button');
 
               button.innerText = 'Bonjour';
               button.onclick = () => {
-                  alert(person.direBonjour());
-                  person.name = 'toto';
+                alert(person.direBonjour());
+                person.name = 'toto';
+              }
+
+              const buttonDel = document.createElement('button');
+              buttonDel.innerText = 'X';
+              buttonDel.onclick = () => {
+                if (confirm(`Êtes-vous sûr.e de vouloir supprimer ${person.name} ?`)) {
+                    persons.splice(persons.indexOf(person), 1);
+                    storePersons();
+                    refreshPersons();
+                }
               }
 
               listItem.appendChild(title);
               listItem.appendChild(button);
+              listItem.appendChild(buttonDel);
               list.appendChild(listItem);
           });
       }
