@@ -55,11 +55,9 @@
             linkDetails.classList.add('internal-link');
             linkDetails.innerText = course.title;
             linkDetails.addEventListener('click', () => {
-                const divDetails = document.getElementsByClassName('details')[0];
+                const event = new CustomEvent('courseChange', { detail: { course } });
 
-                divDetails.classList.add('selected');
-                currentCourse = course;
-                displayCurrentCourse();
+                document.dispatchEvent(event);
             })
 
             listItem.appendChild(linkDetails);
@@ -211,6 +209,14 @@
           btnAddCourse.addEventListener('click', addCourse);
           btnAddProf.addEventListener('click', addProfessor);
           btnAddStud.addEventListener('click', addStudent);
+
+          document.addEventListener('courseChange', (event) => {
+            const divDetails = document.getElementsByClassName('details')[0];
+
+            divDetails.classList.add('selected');
+            currentCourse = event.detail.course;
+            displayCurrentCourse();
+          });
 
           retrieveCourses();
           displayCourses();
