@@ -2,6 +2,22 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+      }
+
+      .courses-actions-container {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .internal-link {
+        cursor: pointer;
+        text-decoration: underline;
+        color: blue;
+      }
+
       .professor {
         font-weight: bold;
       }
@@ -12,29 +28,93 @@
 
       #liste {
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
+        justify-items: center;
       }
 
-      #liste > div {
-        display: grid;
-        grid-template-columns: 3fr 1fr 1fr;
-        grid-gap: 10px;
+      .details {
+        visibility: hidden;
+        border: 1pt solid black;
+      }
+
+      .details.selected {
+        visibility: visible;
       }
     </style>
     <script src="./scripts/classes.js"></script>
     <script lang="js">
-      const persons = [];
-      let list;
+      const courses = [];
+      let currentCourse = null;
+      let listCourses;
+
+      function displayCourses() {
+        courses.forEach(course => {
+            const listItem = document.createElement('li');
+            const linkDetails = document.createElement('span');
+
+            linkDetails.classList.add('internal-link');
+            linkDetails.innerText = course.title;
+            linkDetails.addEventListener('click', () => {
+                const divDetails = document.getElementsByClassName('details')[0];
+
+                divDetails.classList.add('selected');
+                currentCourse = course;
+                displayCurrentCourse();
+            })
+
+            listItem.appendChild(linkDetails);
+            listCourses.appendChild(listItem);
+        })
+      }
+
+      function clearCourses() {
+        while(listCourses.children.length > 0) {
+            listCourses.removeChild(listCourses.firstChild);
+        }
+      }
+
+      function refreshCourses() {
+        clearCourses();
+        displayCourses();
+      }
+
+      function addCourse() {
+        const txtCourseTitle = document.getElementById('txtCourseTitle');
+        const courseTitle = txtCourseTitle.value;
+
+        if (courseTitle) {
+            if (courses.some(course => course.title === courseTitle)) {
+                alert('Ce cours existe déjà')
+            } else {
+                const course = new Course(courseTitle);
+
+                courses.push(course);
+                storeCourses();
+                refreshCourses();
+            }
+        }
+      }
+
+      function displayCurrentCourse() {
+        if (!currentCourse) {
+            return;
+        }
+
+        const courseTitle = document.getElementById('courseTitle');
+
+        courseTitle.innerText = currentCourse.title;
+        refreshPersons();
+      }
 
       function clearPersons() {
-          while (list.children.length > 0) {
-              list.removeChild(list.firstChild);
+          while (listPersons.children.length > 0) {
+              listPersons.removeChild(listPersons.firstChild);
           }
       }
 
-      function displayPersons() {
-          persons.forEach(person => {
-              const listItem = document.createElement('div');
+      function displayPersons(course) {
+          course.persons.forEach(person => {
+              const listItem = document.createElement('li');
               const title = document.createElement('span');
               title.innerText = person.name;
 
@@ -50,8 +130,7 @@
 
               button.innerText = 'Bonjour';
               button.onclick = () => {
-                alert(person.direBonjour());
-                person.name = 'toto';
+                  alert(person.direBonjour());
               }
 
               const buttonDel = document.createElement('button');
@@ -66,29 +145,28 @@
 
               listItem.appendChild(title);
               listItem.appendChild(button);
-              listItem.appendChild(buttonDel);
-              list.appendChild(listItem);
+              listPersons.appendChild(listItem);
           });
       }
 
       function refreshPersons() {
           clearPersons();
-          displayPersons();
+          displayPersons(currentCourse);
       }
 
       function addProfessor() {
-        if (persons.some(person => person instanceof Professor)) {
-            alert('Il existe déjà un professeur dans cette classe');
+        if (currentCourse.professor) {
+            alert('Il ne peut y avoir qu\'un seul professeur par cours');
             return;
         }
 
-        const name = prompt('Nom du professeur');
-        const teaches = prompt('Matière enseignée');
-        const professor = new Professor(name, teaches);
+          const name = prompt('Nom du professeur');
+          const teaches = prompt('Matière enseignée');
+          const professor = new Professor(name, teaches);
 
-        persons.push(professor);
-        storePersons();
-        refreshPersons();
+          currentCourse.persons.push(professor);
+          storeCourses();
+          refreshPersons();
       }
 
       function addStudent() {
@@ -96,62 +174,69 @@
           const year = prompt('Année ?');
           const student = new Student(name, year);
 
-          persons.push(student);
-          storePersons();
+          currentCourse.persons.push(student);
+          storeCourses();
           refreshPersons();
       }
 
-      function personsToJSON() {
-          return persons.map(person => person.toJSON());
+      function coursesToJSON() {
+          return courses.map(course => course.toJSON());
       }
 
-      function storePersons() {
-          const jsonPersons = personsToJSON();
-          localStorage.setItem('persons', JSON.stringify(jsonPersons));
+      function storeCourses() {
+          const jsonCourses = coursesToJSON();
+          localStorage.setItem('courses', JSON.stringify(jsonCourses));
       }
 
-      function retrievePersons() {
-          const strPersons = localStorage.getItem('persons');
+      function retrieveCourses() {
+          const strCourses = localStorage.getItem('courses');
 
-          if (strPersons) {
-              const jsonPersons = JSON.parse(strPersons);
-              persons.push(
-                  ...jsonPersons.map(jsonPerson => {
-                      let person;
-
-                      switch (jsonPerson.type) {
-                          case 'Professor':
-                              person = new Professor();
-                              break;
-                          case 'Student':
-                              person = new Student();
-                              break;
-                      }
-
-                      person.fromJSON(jsonPerson);
-                      return person;
-                  })
-              );
+          if (strCourses) {
+              const jsonCourses = JSON.parse(strCourses);
+              courses.push(
+                ...jsonCourses.map(jsonCourse => {
+                    const course = new Course('');
+                    course.fromJSON(jsonCourse)
+                    return course;
+              }));
           }
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-          list = document.getElementById('liste');
+          listCourses = document.getElementById('listCourses');
+          const btnAddCourse = document.getElementById('btnAddCourse');
           const btnAddProf = document.getElementById('btnAddProf');
           const btnAddStud = document.getElementById('btnAddStud');
 
+          btnAddCourse.addEventListener('click', addCourse);
           btnAddProf.addEventListener('click', addProfessor);
           btnAddStud.addEventListener('click', addStudent);
 
-          retrievePersons();
-          displayPersons();
+          retrieveCourses();
+          displayCourses();
       });
     </script>
   </head>
 
   <body>
-    <div id="liste"></div>
-    <button id="btnAddProf">Ajouter un professeur</button>
-    <button id="btnAddStud">Ajouter un étudiant</button>
+    <div class="main">
+      <div class="courses">
+        <ul id="listCourses"></ul>
+        <div class="courses-actions-container">
+          <div>
+            <label>Titre</label>
+            <input type="text" id="txtCourseTitle" />
+          </div>
+          <button id="btnAddCourse">Ajouter</button>
+        </div>
+      </div>
+      <div class="details">
+        <ul id="liste"></ul>
+        <h1 id="courseTitle"></h1>
+        <ul id="listPersons"></ul>
+        <button id="btnAddProf">Ajouter un professeur</button>
+        <button id="btnAddStud">Ajouter un étudiant</button>
+      </div>
+    </div>
   </body>
 </html>
