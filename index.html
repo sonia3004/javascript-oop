@@ -1,21 +1,34 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
+    <title>Gestion des Cours et des Salles</title>
     <style>
       .main {
         display: grid;
         grid-template-columns: 1fr 2fr;
+        gap: 20px;
       }
 
-      .courses-actions-container {
+      .courses-actions-container,
+      .rooms-actions-container {
         display: flex;
         flex-direction: column;
+        gap: 10px;
       }
 
       .internal-link {
         cursor: pointer;
         text-decoration: underline;
         color: blue;
+      }
+
+      #listCourses,
+      #listRooms,
+      #listPersons {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
       }
 
       .professor {
@@ -26,15 +39,10 @@
         font-style: italic;
       }
 
-      #liste {
-        display: flex;
-        justify-content: space-between;
-        justify-items: center;
-      }
-
       .details {
         visibility: hidden;
-        border: 1pt solid black;
+        border: 1px solid black;
+        padding: 20px;
       }
 
       .details.selected {
@@ -42,204 +50,305 @@
       }
     </style>
     <script src="./scripts/classes.js"></script>
-    <script lang="js">
+    <script>
       const courses = [];
+      const rooms = [];
       let currentCourse = null;
-      let listCourses;
+      let listCourses, listRooms, listPersons;
 
-      function displayCourses() {
-        courses.forEach(course => {
-            const listItem = document.createElement('li');
-            const linkDetails = document.createElement('span');
-
-            linkDetails.classList.add('internal-link');
-            linkDetails.innerText = course.title;
-            linkDetails.addEventListener('click', () => {
-                const event = new CustomEvent('courseChange', { detail: { course } });
-
-                document.dispatchEvent(event);
-            })
-
-            listItem.appendChild(linkDetails);
-            listCourses.appendChild(listItem);
-        })
+      // Sauvegarde  des données dans localStorage
+      function saveData() {
+        localStorage.setItem("courses", JSON.stringify(courses.map((c) => c.toJSON())));
+        localStorage.setItem("rooms", JSON.stringify(rooms.map((r) => r.toJSON())));
       }
 
-      function clearCourses() {
-        while(listCourses.children.length > 0) {
-            listCourses.removeChild(listCourses.firstChild);
-        }
+      // Récup des données depuis localStorage
+      function loadData() {
+        const savedCourses = JSON.parse(localStorage.getItem("courses")) || [];
+        const savedRooms = JSON.parse(localStorage.getItem("rooms")) || [];
+
+        savedCourses.forEach((json) => {
+          const course = new Course("");
+          course.fromJSON(json);
+          courses.push(course);
+        });
+
+        savedRooms.forEach((json) => {
+          const room = new Room("");
+          room.fromJSON(json);
+          rooms.push(room);
+        });
       }
 
-      function refreshCourses() {
-        clearCourses();
-        displayCourses();
-      }
-
+      // Ajouter un cours 
       function addCourse() {
-        const txtCourseTitle = document.getElementById('txtCourseTitle');
-        const courseTitle = txtCourseTitle.value;
+        const txtCourseTitle = document.getElementById("txtCourseTitle");
+        const courseTitle = txtCourseTitle.value.trim();
 
         if (courseTitle) {
-            if (courses.some(course => course.title === courseTitle)) {
-                alert('Ce cours existe déjà')
-            } else {
-                const course = new Course(courseTitle);
-
-                courses.push(course);
-                storeCourses();
-                refreshCourses();
-            }
-        }
-      }
-
-      function displayCurrentCourse() {
-        if (!currentCourse) {
-            return;
-        }
-
-        const courseTitle = document.getElementById('courseTitle');
-
-        courseTitle.innerText = currentCourse.title;
-        refreshPersons();
-      }
-
-      function clearPersons() {
-          while (listPersons.children.length > 0) {
-              listPersons.removeChild(listPersons.firstChild);
+          if (courses.some((c) => c.title === courseTitle)) {
+            alert("Ce cours existe déjà !");
+          } else {
+            const course = new Course(courseTitle);
+            courses.push(course);
+            saveData();
+            refreshCourses();
           }
-      }
-
-      function displayPersons(course) {
-          course.persons.forEach(person => {
-              const listItem = document.createElement('li');
-              const title = document.createElement('span');
-              title.innerText = person.name;
-
-              if (person instanceof Professor) {
-                listItem.classList.add('professor');
-              }
-
-              if (person instanceof Student) {
-                 listItem.classList.add('student');
-              }
-
-              const button = document.createElement('button');
-
-              button.innerText = 'Bonjour';
-              button.onclick = () => {
-                  alert(person.direBonjour());
-              }
-
-              const buttonDel = document.createElement('button');
-              buttonDel.innerText = 'X';
-              buttonDel.onclick = () => {
-                if (confirm(`Êtes-vous sûr.e de vouloir supprimer ${person.name} ?`)) {
-                    persons.splice(persons.indexOf(person), 1);
-                    storePersons();
-                    refreshPersons();
-                }
-              }
-
-              listItem.appendChild(title);
-              listItem.appendChild(button);
-              listPersons.appendChild(listItem);
-          });
-      }
-
-      function refreshPersons() {
-          clearPersons();
-          displayPersons(currentCourse);
-      }
-
-      function addProfessor() {
-        if (currentCourse.professor) {
-            alert('Il ne peut y avoir qu\'un seul professeur par cours');
-            return;
+          txtCourseTitle.value = "";
+        } else {
+          alert("Veuillez entrer un titre de cours.");
         }
-
-          const name = prompt('Nom du professeur');
-          const teaches = prompt('Matière enseignée');
-          const professor = new Professor(name, teaches);
-
-          currentCourse.persons.push(professor);
-          storeCourses();
-          refreshPersons();
       }
 
-      function addStudent() {
-          const name = prompt('Nom de l\'élève');
-          const year = prompt('Année ?');
-          const student = new Student(name, year);
+      // Afficher les cours
+      function displayCourses() {
+        listCourses.innerHTML = "";
+        courses.forEach((course) => {
+          const listItem = document.createElement("li");
+          const linkDetails = document.createElement("span");
 
-          currentCourse.persons.push(student);
-          storeCourses();
-          refreshPersons();
-      }
+          linkDetails.classList.add("internal-link");
+          linkDetails.innerText = course.title;
 
-      function coursesToJSON() {
-          return courses.map(course => course.toJSON());
-      }
-
-      function storeCourses() {
-          const jsonCourses = coursesToJSON();
-          localStorage.setItem('courses', JSON.stringify(jsonCourses));
-      }
-
-      function retrieveCourses() {
-          const strCourses = localStorage.getItem('courses');
-
-          if (strCourses) {
-              const jsonCourses = JSON.parse(strCourses);
-              courses.push(
-                ...jsonCourses.map(jsonCourse => {
-                    const course = new Course('');
-                    course.fromJSON(jsonCourse)
-                    return course;
-              }));
-          }
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-          listCourses = document.getElementById('listCourses');
-          const btnAddCourse = document.getElementById('btnAddCourse');
-          const btnAddProf = document.getElementById('btnAddProf');
-          const btnAddStud = document.getElementById('btnAddStud');
-
-          btnAddCourse.addEventListener('click', addCourse);
-          btnAddProf.addEventListener('click', addProfessor);
-          btnAddStud.addEventListener('click', addStudent);
-
-          document.addEventListener('courseChange', (event) => {
-            const divDetails = document.getElementsByClassName('details')[0];
-
-            divDetails.classList.add('selected');
-            currentCourse = event.detail.course;
+          linkDetails.addEventListener("click", () => {
+            currentCourse = course;
             displayCurrentCourse();
           });
 
-          retrieveCourses();
-          displayCourses();
+          const deleteButton = document.createElement("button");
+          deleteButton.innerText = "Supprimer";
+          deleteButton.addEventListener("click", () => {
+            if (confirm(`Supprimer le cours "${course.title}" ?`)) {
+              const index = courses.indexOf(course);
+              if (index !== -1) {
+                courses.splice(index, 1);
+                saveData();
+                refreshCourses();
+                clearCourseDetails();
+              }
+            }
+          });
+
+          listItem.appendChild(linkDetails);
+          listItem.appendChild(deleteButton);
+          listCourses.appendChild(listItem);
+        });
+      }
+
+      // Ajouter une salle
+      function addRoom() {
+        const txtRoomName = document.getElementById("txtRoomName");
+        const roomName = txtRoomName.value.trim();
+
+        if (roomName) {
+          if (rooms.some((r) => r.name === roomName)) {
+            alert("Cette salle existe déjà !");
+          } else {
+            const room = new Room(roomName);
+            rooms.push(room);
+            saveData();
+            refreshRooms();
+          }
+          txtRoomName.value = "";
+        } else {
+          alert("Veuillez entrer un nom de salle.");
+        }
+      }
+
+      // Afficher les salles
+      function displayRooms() {
+        listRooms.innerHTML = "";
+        rooms.forEach((room) => {
+          const listItem = document.createElement("li");
+          listItem.innerText = room.name;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.innerText = "Supprimer";
+          deleteButton.addEventListener("click", () => {
+            if (confirm(`Supprimer la salle "${room.name}" ?`)) {
+              const index = rooms.indexOf(room);
+              if (index !== -1) {
+                rooms.splice(index, 1);
+                saveData();
+                refreshRooms();
+              }
+            }
+          });
+
+          listItem.appendChild(deleteButton);
+          listRooms.appendChild(listItem);
+        });
+      }
+
+      // Assigner une salle à un cours
+      function assignRoomToCourse() {
+        if (!currentCourse) {
+          alert("Sélectionnez un cours pour lui assigner une salle.");
+          return;
+        }
+
+        const roomName = prompt("Nom de la salle ?");
+        const room = rooms.find((r) => r.name === roomName);
+
+        if (room) {
+          currentCourse.room = room;
+          saveData();
+          displayCurrentCourse();
+        } else {
+          alert("Salle introuvable.");
+        }
+      }
+
+      // Ajouter un professeur
+      function addProfessor() {
+        if (!currentCourse) {
+          alert("Aucun cours sélectionné !");
+          return;
+        }
+
+        if (currentCourse.professor) {
+          alert("Ce cours a déjà un professeur.");
+          return;
+        }
+
+        const name = prompt("Nom du professeur ?");
+        const subject = prompt("Matière ?");
+        if (name && subject) {
+          currentCourse.persons.push(new Professor(name, subject));
+          saveData();
+          displayPersons(currentCourse);
+        }
+      }
+
+      // Ajouter un étudiant
+      function addStudent() {
+        if (!currentCourse) {
+          alert("Aucun cours sélectionné !");
+          return;
+        }
+
+        const name = prompt("Nom de l'étudiant ?");
+        const year = prompt("Année ?");
+        if (name && year) {
+          currentCourse.persons.push(new Student(name, year));
+          saveData();
+          displayPersons(currentCourse);
+        }
+      }
+
+      // Afficher les détails du cours
+      function displayCurrentCourse() {
+        if (!currentCourse) return;
+
+        const courseTitle = document.getElementById("courseTitle");
+        const courseRoom = document.getElementById("courseRoom");
+
+        courseTitle.innerText = currentCourse.title;
+        courseRoom.innerText = currentCourse.room
+          ? `Salle : ${currentCourse.room.name}`
+          : "Pas de salle assignée.";
+
+        displayPersons(currentCourse);
+
+        const detailsDiv = document.querySelector(".details");
+        detailsDiv.classList.add("selected");
+      }
+
+      // Afficher les personnes
+      function displayPersons(course) {
+        listPersons.innerHTML = "";
+        course.persons.forEach((person) => {
+          const listItem = document.createElement("li");
+          listItem.innerText = person.name;
+
+          if (person instanceof Professor) {
+            listItem.classList.add("professor");
+          } else if (person instanceof Student) {
+            listItem.classList.add("student");
+          }
+
+          const greetButton = document.createElement("button");
+          greetButton.innerText = "Dire Bonjour";
+          greetButton.addEventListener("click", () => {
+            alert(person.direBonjour());
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.innerText = "Supprimer";
+          deleteButton.addEventListener("click", () => {
+            const index = course.persons.indexOf(person);
+            if (index !== -1) {
+              course.persons.splice(index, 1);
+              saveData();
+              displayPersons(course);
+            }
+          });
+
+          listItem.appendChild(greetButton);
+          listItem.appendChild(deleteButton);
+          listPersons.appendChild(listItem);
+        });
+      }
+
+      function refreshCourses() {
+        displayCourses();
+      }
+
+      function refreshRooms() {
+        displayRooms();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        listCourses = document.getElementById("listCourses");
+        listRooms = document.getElementById("listRooms");
+        listPersons = document.getElementById("listPersons");
+
+        const btnAddCourse = document.getElementById("btnAddCourse");
+        const btnAddRoom = document.getElementById("btnAddRoom");
+        const btnAssignRoom = document.getElementById("btnAssignRoom");
+        const btnAddProf = document.getElementById("btnAddProf");
+        const btnAddStud = document.getElementById("btnAddStud");
+
+        btnAddCourse.addEventListener("click", addCourse);
+        btnAddRoom.addEventListener("click", addRoom);
+        btnAssignRoom.addEventListener("click", assignRoomToCourse);
+        btnAddProf.addEventListener("click", addProfessor);
+        btnAddStud.addEventListener("click", addStudent);
+
+        loadData();
+        refreshCourses();
+        refreshRooms();
       });
     </script>
   </head>
-
   <body>
     <div class="main">
+      <!-- Section Cours -->
       <div class="courses">
+        <h2>Gestion des Cours</h2>
         <ul id="listCourses"></ul>
         <div class="courses-actions-container">
-          <div>
-            <label>Titre</label>
-            <input type="text" id="txtCourseTitle" />
-          </div>
-          <button id="btnAddCourse">Ajouter</button>
+          <input type="text" id="txtCourseTitle" placeholder="Nom du cours" />
+          <button id="btnAddCourse">Ajouter un cours</button>
         </div>
       </div>
+
+      <!-- Section Salles -->
+      <div class="rooms">
+        <h2>Gestion des Salles</h2>
+        <ul id="listRooms"></ul>
+        <div class="rooms-actions-container">
+          <input type="text" id="txtRoomName" placeholder="Nom de la salle" />
+          <button id="btnAddRoom">Ajouter une salle</button>
+        </div>
+      </div>
+
+      <!-- Détails du cours -->
       <div class="details">
-        <ul id="liste"></ul>
         <h1 id="courseTitle"></h1>
+        <p id="courseRoom">Aucun cours sélectionné.</p>
         <ul id="listPersons"></ul>
+        <button id="btnAssignRoom">Assigner une salle</button>
         <button id="btnAddProf">Ajouter un professeur</button>
         <button id="btnAddStud">Ajouter un étudiant</button>
       </div>

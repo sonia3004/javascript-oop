@@ -77,9 +77,32 @@ class Student extends Person {
   }
 }
 
+class Room {
+  #name = "";
+
+  constructor(name) {
+    this.#name = name;
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  toJSON() {
+    return {
+      name: this.#name,
+    };
+  }
+
+  fromJSON(data) {
+    this.#name = data.name;
+  }
+}
+
 class Course {
   #title = "";
   #persons = [];
+  #room = null; // Salle associée
 
   constructor(title) {
     this.#title = title;
@@ -102,7 +125,7 @@ class Course {
   }
 
   set professor(prof) {
-    if (!prof instanceof Professor) {
+    if (!(prof instanceof Professor)) {
       throw "Seuls les professeurs sont autorisés à enseigner dans cette classe";
     }
 
@@ -111,14 +134,25 @@ class Course {
     );
 
     if (profIndex !== -1) {
-      this.#persons[prodIndex] = prof;
+      this.#persons[profIndex] = prof;
     } else {
       this.#persons.push(prof);
     }
   }
 
+  get room() {
+    return this.#room;
+  }
+
+  set room(room) {
+    if (!(room instanceof Room)) {
+      throw "La salle doit être une instance de Room.";
+    }
+    this.#room = room;
+  }
+
   addStudent(student) {
-    if (!student instanceof Student) {
+    if (!(student instanceof Student)) {
       throw "Seuls les étudiants sont autorisés à étudier dans cette classe";
     }
 
@@ -161,22 +195,26 @@ class Course {
     this.#persons = data.persons.map((jsonPerson) => {
       if (jsonPerson.type === "Professor") {
         const professor = new Professor("");
-
         professor.fromJSON(jsonPerson);
         return professor;
       }
 
       const student = new Student("");
-
       student.fromJSON(jsonPerson);
       return student;
     });
+
+    if (data.room) {
+      this.#room = new Room("");
+      this.#room.fromJSON(data.room);
+    }
   }
 
   toJSON() {
     return {
       title: this.#title,
       persons: this.#persons.map((person) => person.toJSON()),
+      room: this.#room ? this.#room.toJSON() : null,
     };
   }
 }
